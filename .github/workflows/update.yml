@@ -1,0 +1,41 @@
+name: Follow Mihrab's releases
+# Hourly: when Mihrab has a newer release with its Windows installers
+# attached, point the manifest at it, install it here to prove it works,
+# and only then push. A failed install leaves the bucket on the version
+# that worked.
+on:
+  schedule:
+    - cron: '41 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: update
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Look for a newer release
+        id: update
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $out = ./scripts/update.ps1
+          $out
+          if ($out -match '^updated (.+)$') { "version=$($Matches[1])" >> $env:GITHUB_OUTPUT }
+      - name: Install, start and remove it
+        if: steps.update.outputs.version
+        shell: pwsh
+        run: ./scripts/test-install.ps1 bucket/mihrab.json
+      - name: Push
+        if: steps.update.outputs.version
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add bucket/mihrab.json
+          git commit -m "mihrab: ${{ steps.update.outputs.version }}"
+          git push

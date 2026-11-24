@@ -1,0 +1,17 @@
+name: Install test
+# Every change to the manifest is installed, started and removed on a real
+# Windows machine before anyone else's `scoop install` meets it.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  install:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install, start and remove Mihrab
+        shell: pwsh
+        run: ./scripts/test-install.ps1 bucket/mihrab.json
