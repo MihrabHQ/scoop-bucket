@@ -34,9 +34,13 @@ if ($p.HasExited) { throw "Mihrab exited at start with code $($p.ExitCode)" }
 Write-Host "Mihrab is running (pid $($p.Id))"
 Get-Process mihrab -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 3
+# Where the README and the website say its settings are.
+if (-not (Test-Path "$env:APPDATA\Mihrab")) { throw "no settings folder at $env:APPDATA\Mihrab" }
 
-scoop uninstall mihrab
+# The remove line the README and the website give, as given.
+scoop uninstall mihrab; Remove-Item -Recurse "$env:APPDATA\Mihrab"
 if ($LASTEXITCODE -ne 0) { throw "scoop uninstall failed ($LASTEXITCODE)" }
+if (Test-Path "$env:APPDATA\Mihrab") { throw "settings left at $env:APPDATA\Mihrab" }
 if (Test-Path "$env:USERPROFILE\scoop\apps\mihrab") { throw "still installed after uninstall" }
 if (Test-Path $lnk) { throw "the shortcut outlived the app" }
 Write-Host "installed, started and removed: OK"
