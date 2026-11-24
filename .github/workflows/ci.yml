@@ -9,7 +9,12 @@ permissions:
   contents: read
 jobs:
   install:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # x64, and Arm64 (Surface, Snapdragon laptops) on its own runner.
+        os: [windows-latest, windows-11-arm]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Install, start and remove Mihrab
